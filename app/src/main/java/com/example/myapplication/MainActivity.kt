@@ -22,19 +22,20 @@ import kotlinx.coroutines.Runnable
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var myMessenger: Messenger? = null
+    private var exampleService: Messenger? = null
     private var isServiceBound = false
     private var isCounterRunning = false
     private val handler = Handler(Looper.getMainLooper())
 
     private val serviceConnection = object  : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            myMessenger = Messenger(service)
+            exampleService = Messenger(service)
             isServiceBound = true
             sendMessageToService(MSG_IS_RUNNING)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            myMessenger = null
+            exampleService = null
             isServiceBound = false
         }
     }
@@ -80,11 +81,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
+        checkPermissions()
         myMessenger = Messenger(ResponseHandler())
-//        checkPermissions()
         startService()
-
 
         binding.button.setOnClickListener {
             if (isCounterRunning) {
@@ -125,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         val msg: Message = Message.obtain(null, messageId, 0, 0)
         msg.replyTo = myMessenger
         try {
-            myMessenger?.send(msg)
+            exampleService?.send(msg)
         }catch (e: RemoteException) {
             e.printStackTrace()
         }
@@ -143,8 +142,6 @@ private fun unbindService(){
         isServiceBound = false
     }
 }
-
-
 
     private fun checkPermissions() {
         val isAllGranted = REQUEST_PERMISSIONS.all { permission ->
@@ -164,5 +161,4 @@ private fun unbindService(){
             add(android.Manifest.permission.POST_NOTIFICATIONS)
         }.toTypedArray()
     }
-
 }
